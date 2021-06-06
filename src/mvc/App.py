@@ -1,9 +1,8 @@
 import random
 import sys
-import pyglet
 from PySide6 import QtCore, QtGui, QtOpenGL, QtWidgets
 
-from utils.QTPygletWidget import QPygletWidget
+# from utils.QTPygletWidget import QPygletWidget
 
 
 class MyPygletWidget(QPygletWidget):

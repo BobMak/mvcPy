@@ -1,0 +1,155 @@
+"""
+Example use of webgpu API to draw a triangle. See the triangle_glfw.py
+script (and related scripts) for actually running this.
+
+Similar example in other languages / API's:
+
+* Rust wgpu:
+  https://github.com/gfx-rs/wgpu-rs/blob/master/examples/hello-triangle/main.rs
+* C wgpu:
+  https://github.com/gfx-rs/wgpu/blob/master/examples/triangle/main.c
+* Python Vulkan:
+  https://github.com/realitix/vulkan/blob/master/example/contribs/example_glfw.py
+
+"""
+
+import wgpu
+from pyshader import python2shader
+from pyshader import RES_INPUT, RES_OUTPUT, RES_UNIFORM
+from pyshader import vec2, vec3, vec4, i32, mat4
+import numpy as np
+
+
+
+
+# %% Shaders
+# instead of passing an index to lookup predefined vectors,
+# pass coords of a vertex
+@python2shader
+def vertex_shader(
+        inp_vec: (RES_INPUT, 0, vec2),
+        pos:   (RES_OUTPUT, "Position", vec4),
+        transform: (RES_UNIFORM, (0,0), mat4),
+        color: (RES_OUTPUT, 0, vec3) ):
+
+    pos = transform * vec4(inp_vec, 0.0, 1.0)  # noqa
+    color = vec3(inp_vec, 0.5)  # noqa
+
+
+@python2shader
+def fragment_shader(
+        in_color: (RES_INPUT, 0, vec3),
+        out_color:(RES_OUTPUT, 0, vec4)):
+    out_color = vec4(in_color, 1.0)  # noqa
+
+
+# %% The wgpu calls
+
+
+def main(canvas):
+    """Regular function to setup a viz on the given canvas."""
+    adapter = wgpu.request_adapter(canvas=canvas, power_preference="high-performance")
+    device = adapter.request_device(extensions=[], limits={})
+    vertex_data = np.array(
+        [
+            [0.5, -0.5],
+            [+0.5, +0.5],
+            [-0.5, +0.7]
+        ],
+        dtype=np.float32,
+    )
+
+    # %% Create resource objects (buffers, textures, samplers)
+
+    # Create vertex buffer, and upload data
+    vertex_buffer = device.create_buffer_with_data(
+        data=vertex_data, usage=wgpu.BufferUsage.VERTEX
+    )
+    return _main(canvas, device, vertex_buffer)
+
+
+async def main_async(canvas):
+    """Async function to setup a viz on the given canvas."""
+    adapter = await wgpu.request_adapter_async(
+        canvas=canvas, power_preference="high-performance"
+    )
+    device = await adapter.request_device_async(extensions=[], limits={})
+    return _main(canvas, device)
+
+
+def _main(canvas, device, vb=None):
+
+    vshader = device.create_shader_module(code=vertex_shader)
+    fshader = device.create_shader_module(code=fragment_shader)
+
+    bind_group_layout = device.create_bind_group_layout(entries=[])  # zero bindings
+    bind_group = device.create_bind_group(layout=bind_group_layout, entries=[])
+
+    pipeline_layout = device.create_pipeline_layout(
+        bind_group_layouts=[bind_group_layout]
+    )
+
+    render_pipeline = device.create_render_pipeline(
+        layout=pipeline_layout,
+        vertex_stage={"module": vshader, "entry_point": "main"},
+        fragment_stage={"module": fshader, "entry_point": "main"},
+        primitive_topology=wgpu.PrimitiveTopology.triangle_list,
+        rasterization_state={
+            "front_face": wgpu.FrontFace.ccw,
+            "cull_mode": wgpu.CullMode.none,
+            "depth_bias": 0,
+            "depth_bias_slope_scale": 0.0,
+            "depth_bias_clamp": 0.0,
+        },
+        color_states=[
+            {
+                "format": wgpu.TextureFormat.bgra8unorm_srgb,
+                "alpha_blend": (
+                    wgpu.BlendFactor.one,
+                    wgpu.BlendFactor.zero,
+                    wgpu.BlendOperation.add,
+                ),
+                "color_blend": (
+                    wgpu.BlendFactor.one,
+                    wgpu.BlendFactor.zero,
+                    wgpu.BlendOperation.add,
+                ),
+            }
+        ],
+        vertex_state={"index_format": wgpu.IndexFormat.uint32, "vertex_buffers": []},
+        sample_count=1,
+        sample_mask=0xFFFFFFFF,
+        alpha_to_coverage_enabled=False,
+    )
+
+    swap_chain = device.configure_swap_chain(
+        canvas,
+        device.get_swap_chain_preferred_format(canvas),
+        wgpu.TextureUsage.OUTPUT_ATTACHMENT,
+    )
+
+    def draw_frame():
+        with swap_chain as current_texture_view:
+            command_encoder = device.create_command_encoder()
+
+            render_pass = command_encoder.begin_render_pass(
+                color_attachments=[
+                    {
+                        "attachment": current_texture_view,
+                        "resolve_target": None,
+                        "load_value": (0, 0, 0, 1),  # LoadOp.load or color
+                        "store_op": wgpu.StoreOp.store,
+                    }
+                ],
+            )
+
+            render_pass.set_pipeline(render_pipeline)
+            render_pass.set_bind_group(
+                0, bind_group, [], 0, 999999
+            )  # last 2 elements not used
+            render_pass.set_vertex_buffer(0, vb)
+            render_pass.draw(3, 1, 0, 0)
+            render_pass.end_pass()
+            device.default_queue.submit([command_encoder.finish()])
+
+    canvas.request_draw(draw_frame)
