@@ -1,53 +1,68 @@
-import random
 import sys
-from PySide6 import QtCore, QtGui, QtOpenGL, QtWidgets
 
-# from utils.QTPygletWidget import QPygletWidget
+import PyQt5
+from PyQt5 import QtWidgets, QtGui
+from PyQt5.QtCore import Qt
+import pygame as pg
+
+from mvc.Factory import Factory
 
 
-class MyPygletWidget(QPygletWidget):
-    def on_init(self):
-        self.sprite = pyglet.sprite.Sprite(pyglet.resource.image("logo.png"))
-        self.label = pyglet.text.Label(
-            text="This is a pyglet label rendered in a Qt widget :)")
-        self.setMinimumSize(QtCore.QSize(640, 480))
+class MainWindow(QtWidgets.QMainWindow):
+    def __init__(self, factory, parent=None):
+        super(MainWindow,self).__init__(parent)
+        # self.button = QtWidgets.QPushButton("Hello world", self)
+        self.commands = []
+        self.factory = factory
+        self.model = factory.makeModel()
+        self.main_widget = factory.makeView(self.model)
+        self.setCentralWidget(self.main_widget)
+        self.resize(640, 480)
+        x = QtWidgets.QHBoxLayout(self.main_widget)
+        tb = self.createToolbar()
+        x.addWidget(tb)
+        x.setAlignment(Qt.AlignTop)
+        self.createMenus()
+        self.createActions()
+        self.setLayout(x)
 
-    def on_draw(self):
-        self.sprite.draw()
-        self.label.draw()
+    def actionEvent(self, a0: QtGui.QActionEvent) -> None:
+        print(a0)
 
-class MyWidget(QtWidgets.QWidget):
-    def __init__(self):
-        super().__init__()
+    def createActions(self):
+        # Edit menu
+        edit_menu = self.menuBar().addMenu("Edit")
+        commands = self.factory.getEditCommands()
+        for c in commands:
+            qa = QtWidgets.QAction(c, self)
+            com = self.factory.makeCommand(self.model, c)
+            edit_menu.addAction(qa)
+            self.commands.append(com)
+            # maybe storing a factory call is better, but idk how to pass parameters here
+            qa.triggered.connect(com.execute)
 
-        self.hello = ["Hallo Welt", "Hei maailma", "Hola Mundo", "Привет мир"]
+    def createMenus(self):
+        menu_bar = QtWidgets.QMenuBar()
+        self.setMenuBar(menu_bar)
 
-        self.button = QtWidgets.QPushButton("Click me!")
-        self.text = QtWidgets.QLabel("Hello World")
+    def createToolbar(self):
+        tool_bar = QtWidgets.QToolBar()
+        commands = self.factory.getToolBarCommands()
+        for c in commands:
+            qa = QtWidgets.QAction(c, self)
+            com = self.factory.makeCommand(self.model, c)
+            self.commands.append(com)
+            tool_bar.addAction(qa)
+            qa.triggered.connect(com.execute)
+        return tool_bar
 
-        self.layout = QtWidgets.QVBoxLayout(self)
-        self.layout.addWidget(self.text)
-        self.layout.addWidget(self.button)
-
-        self.button.clicked.connect(self.magic)
-
-    @QtCore.Slot()
-    def magic(self):
-        self.text.setText(random.choice(self.hello))
 
 def main():
-    app = QtWidgets.QApplication([])
-    # widget = MyWidget()
-    widget = MyPygletWidget()
-    widget.resize(800, 600)
-    widget.show()
-    # app.activeWindow()
-    # app.
-    # window = QtWidgets.QWidget()
-    # window.setCentralWidget(widget)
-    # window.show()
-    # # app.connect(widget)
-    sys.exit(app.exec_()) #
+    app = QtWidgets.QApplication(sys.argv)
+    pg.init()
+    w = MainWindow(Factory())
+    w.show()
+    app.exec_()
 
 
 if __name__ == "__main__":
