@@ -4,7 +4,6 @@ class Publisher:
         self.subs = subs
 
     def notify(self):
-        print("notifying", self.subs)
         for s in self.subs:
             s.update()
 

@@ -15,7 +15,7 @@ class PygameWidget(QtWidgets.QWidget):
         self.w = 640
         self.h = 480
         self.s = pg.Surface((self.w, self.h))
-        self.bg_color = (100, 100, 100, 255)
+        self.bg_color = (50, 50, 50, 255)
         self.s.fill(self.bg_color)
         self.data = self.s.get_buffer().raw
         self.image = QtGui.QImage(self.data, self.w, self.h, QtGui.QImage.Format_RGB32)
