@@ -25,6 +25,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.createMenus()
         self.createActions()
         self.setLayout(x)
+        self.setStyleSheet('QPushButton {background-color: #A3C1DA; color: red;}')
 
     def actionEvent(self, a0: QtGui.QActionEvent) -> None:
         print(a0)
