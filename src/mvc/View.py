@@ -12,8 +12,15 @@ class Subscriber:
 class PygameWidget(QtWidgets.QWidget):
     def __init__(self, parent=None):
         super(PygameWidget, self).__init__(parent)
-        self.w = 640
-        self.h = 480
+        self.resize(640, 480)
+
+    def resizeEvent(self, a0: QtGui.QResizeEvent) -> None:
+        self.w = a0.size().width()
+        self.h = a0.size().height()
+        self.updatePyGame()
+        super().resizeEvent(a0)
+
+    def updatePyGame(self):
         self.s = pg.Surface((self.w, self.h))
         self.bg_color = (50, 50, 50, 255)
         self.s.fill(self.bg_color)
