@@ -25,7 +25,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.createMenus()
         self.createActions()
         self.setLayout(x)
-        self.setStyleSheet('QPushButton {background-color: #A3C1DA; color: red;}')
+        self.setStyleSheet('QAction {background-color: #A3C1DA; color: red;}')
 
     def actionEvent(self, a0: QtGui.QActionEvent) -> None:
         print(a0)
@@ -48,6 +48,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def createToolbar(self):
         tool_bar = QtWidgets.QToolBar()
+        tool_bar.setStyleSheet('color: rgb(230,230,230)')
         commands = self.factory.getToolBarCommands()
         for c in commands:
             qa = QtWidgets.QAction(c, self)
