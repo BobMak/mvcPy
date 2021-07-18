@@ -1,4 +1,4 @@
-import pickle
+import dill
 
 
 class Publisher:
@@ -23,10 +23,10 @@ class Model(Publisher):
         for attribute in self.savable:
             toSave[attribute] = self.__dict__[attribute]
         with open(filename, "wb") as f:
-            pickle.dump(toSave, f, protocol=pickle.HIGHEST_PROTOCOL)
+            dill.dump(toSave, f, recurse=True)
 
     def load(self, filename):
         with open(filename, "rb") as f:
-            saved = pickle.load(f)
+            saved = dill.load(f)
         for attribute, value in saved.items():
             self.__dict__[attribute] = saved[attribute]

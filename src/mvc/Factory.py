@@ -16,11 +16,11 @@ class Factory:
 
     @staticmethod
     def getEditCommands():
-        return ["edit1", "edit2"]
+        return ["save", "load"]
 
     @staticmethod
     def getToolBarCommands():
-        return ["toolbar1", "toolbar2"]
+        return []
 
     @staticmethod
     def makeCommand(model, commandStr):
