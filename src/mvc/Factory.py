@@ -1,4 +1,6 @@
+from mvc.LoadCommand import LoadCommand
 from mvc.Model import Model
+from mvc.SaveCommand import SaveCommand
 from mvc.View import View
 from mvc.Command import Command
 
@@ -22,8 +24,10 @@ class Factory:
 
     @staticmethod
     def makeCommand(model, commandStr):
-        # if commandStr=="undo":
-        #     return UndoCommand(model)
+        if commandStr=="save":
+            return SaveCommand(model, None)
+        if commandStr == "load":
+            return LoadCommand(model, None)
         return Command(model, commandStr)
 
     @staticmethod

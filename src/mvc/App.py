@@ -58,6 +58,7 @@ class MainWindow(QtWidgets.QMainWindow):
         return tool_bar
 
 
+# todo fix the app continuing to run after the main window is closed
 def main():
     app = QtWidgets.QApplication(sys.argv)
     pg.init()
