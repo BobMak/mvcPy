@@ -4,6 +4,7 @@ import PyQt5
 from PyQt5 import QtWidgets, QtGui
 from PyQt5.QtCore import Qt
 import pygame as pg
+from PyQt5.QtWidgets import QAction, QSlider
 
 from mvc.Factory import Factory
 
@@ -48,15 +49,21 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def createToolbar(self):
         tool_bar = QtWidgets.QToolBar()
-        tool_bar.setStyleSheet('color: rgb(230,230,230)')
+        tool_bar.setStyleSheet('color: rgb(230,230,230); padding: 1px -1px -1px 1px')
         commands = self.factory.getToolBarCommands()
         for c in commands:
             # qa = QtWidgets.QAction(c, self)
             com = self.factory.makeCommand(self.model, c)
-            qa = com.getQTWidget()(c, self)
+            qa = com.getQTWidget()  #(c, self)
+            qa.setParent(self)
             self.commands.append(com)
-            tool_bar.addAction(qa)
-            qa.triggered.connect(com.execute)
+            if isinstance(qa, QSlider):
+                tool_bar.addWidget(qa)
+                qa.sliderMoved.connect(com.execute)
+                qa.sliderPressed.connect(com.execute)
+            else:
+                tool_bar.addAction(qa)
+                qa.triggered.connect(com.execute)
         return tool_bar
 
 
