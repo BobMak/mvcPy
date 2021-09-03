@@ -51,8 +51,9 @@ class MainWindow(QtWidgets.QMainWindow):
         tool_bar.setStyleSheet('color: rgb(230,230,230)')
         commands = self.factory.getToolBarCommands()
         for c in commands:
-            qa = QtWidgets.QAction(c, self)
+            # qa = QtWidgets.QAction(c, self)
             com = self.factory.makeCommand(self.model, c)
+            qa = com.getQTWidget()(c, self)
             self.commands.append(com)
             tool_bar.addAction(qa)
             qa.triggered.connect(com.execute)
