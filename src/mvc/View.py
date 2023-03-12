@@ -1,5 +1,3 @@
-import threading
-
 import PyQt5
 from PyQt5 import QtWidgets, QtGui
 
@@ -15,7 +13,10 @@ class PygameWidget(QtWidgets.QWidget):
     def __init__(self, parent=None):
         super(PygameWidget, self).__init__(parent)
         self.resize(640, 480)
-        self.lock = threading.Lock()
+        self.w = 640
+        self.h = 480
+        self.s = pg.Surface((self.w, self.h), pg.SRCALPHA)
+        self.bg_color = (50, 50, 50, 20)
 
     def resizeEvent(self, a0: QtGui.QResizeEvent) -> None:
         self.w = a0.size().width()
@@ -24,16 +25,12 @@ class PygameWidget(QtWidgets.QWidget):
         super().resizeEvent(a0)
 
     def updatePyGame(self):
-        self.s = pg.Surface((self.w, self.h))
-        self.bg_color = (50, 50, 50, 255)
         self.s.fill(self.bg_color)
         self.data = self.s.get_buffer().raw
         self.image = QtGui.QImage(self.data, self.w, self.h, QtGui.QImage.Format_RGB32)
 
     def paintEvent(self, event):
         qp = QtGui.QPainter()
-        if qp.isActive():
-            qp.end()
         qp.begin(self)
         qp.drawImage(0, 0, self.image)
         qp.end()
